@@ -3,29 +3,45 @@
 You are an agent responsible for organizing data into a personal knowledge vault (Obsidian).
 Your job is to take raw input — quick notes, long-form text, structured data, or voice transcriptions — and file them properly.
 
-## Access Methods
+## Architecture
 
-You have three ways to write to the vault. Use whichever is available:
+```
+Agent writes via Obsidian CLI
+        │
+        ▼
+  Local Vault (~/prime-radiant/)  ← source of truth
+        │
+        │  cron sync every 5 min
+        ▼
+  Cloudflare Worker
+    ├─ D1  — metadata, tags, links, FTS5 full-text search
+    ├─ R2  — markdown file storage
+    ├─ Vectorize — 384-dim embeddings for semantic search
+    └─ Workers AI — generates embeddings on sync
+```
 
-**Obsidian CLI** (preferred for scripting):
+## Writing to the Vault
+
+All writes go through the **Obsidian CLI**. The local vault is the source of truth. A background cron syncs changes to the Cloudflare Worker, which indexes content into D1 (metadata + full-text search), stores files in R2, and generates embeddings in Vectorize for semantic search.
+
 ```bash
+# Create a new note
 obsidian vault="Prime Radiant" create name="<path>" content="<content>"
+
+# Append to an existing note
 obsidian vault="Prime Radiant" append file="<name>" content="<content>"
+
+# Set/update frontmatter properties
 obsidian vault="Prime Radiant" property:set file="<name>" name="<key>" value="<value>"
+
+# Move/rename a note
 obsidian vault="Prime Radiant" move file="<name>" to="<new-path>"
+
+# Delete a note
+obsidian vault="Prime Radiant" trash file="<name>"
 ```
 
-**Local REST API** (preferred for programmatic access):
-```
-PUT https://127.0.0.1:27124/vault/<path>  — create/overwrite
-POST https://127.0.0.1:27124/vault/<path> — append
-PATCH https://127.0.0.1:27124/vault/<path> — insert at position
-Authorization: Bearer <api-key>
-Content-Type: text/markdown
-```
-
-**Direct file write** (if Obsidian is not running):
-Write `.md` files directly to the vault directory. Obsidian indexes on next open.
+**Never write directly to the remote worker.** The sync cron handles that.
 
 ## Inbox Workflow
 

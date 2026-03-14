@@ -40,41 +40,6 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: 'vault_write',
-    description: 'Create or update a note. Content should be full markdown with YAML frontmatter.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Note path' },
-        content: { type: 'string', description: 'Full markdown content including frontmatter' },
-      },
-      required: ['path', 'content'],
-    },
-  },
-  {
-    name: 'vault_append',
-    description: 'Append content to an existing note.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Note path' },
-        content: { type: 'string', description: 'Content to append' },
-      },
-      required: ['path', 'content'],
-    },
-  },
-  {
-    name: 'vault_delete',
-    description: 'Delete a note.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Note path' },
-      },
-      required: ['path'],
-    },
-  },
-  {
     name: 'vault_list',
     description: 'List notes with optional filtering by type, status, or tag.',
     inputSchema: {
@@ -131,12 +96,6 @@ async function handleToolCall(env: Env, name: string, args: Record<string, unkno
       if (!note) return { error: 'Not found' };
       return { path: args.path, ...note.parsed, raw: note.raw };
     }
-    case 'vault_write':
-      return vault.writeNote(env, args.path as string, args.content as string);
-    case 'vault_append':
-      return vault.appendNote(env, args.path as string, args.content as string);
-    case 'vault_delete':
-      return { deleted: await vault.deleteNote(env, args.path as string) };
     case 'vault_list':
       return vault.listNotes(env, {
         type: args.type as string, status: args.status as string,

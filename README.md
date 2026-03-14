@@ -10,7 +10,7 @@ A lifelong, agent-accessible personal knowledge base built on Obsidian.
 | Module | What | Required? |
 |--------|------|-----------|
 | **Core** (this README) | Obsidian vault + plugins + CLI + skills + templates | Yes |
-| **[Worker](worker/)** | Cloudflare Worker — remote REST API + MCP server, works without Obsidian running | Optional |
+| **[Worker](worker/)** | Cloudflare Worker — read-only MCP server + REST API for search/embeddings. Cron-synced from local vault. | Optional |
 | **Graph** *(planned)* | Interactive knowledge graph visualization via Quartz + Cloudflare Pages | Optional |
 
 Start with Core. Add modules when you need them.
@@ -18,47 +18,59 @@ Start with Core. Add modules when you need them.
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  You (Human)                     │
-│  Phone quick note · Voice memo · Long-form write │
-└──────────┬──────────────────────────┬────────────┘
-           │ raw input                │ browse/edit
-           ▼                          ▼
-┌─────────────────┐       ┌────────────────────────┐
-│   00-inbox/     │       │   Obsidian App         │
-│   (drop zone)   │       │   (read/write/link)    │
-└────────┬────────┘       └────────────────────────┘
-         │                          ▲
-         ▼                          │
-┌─────────────────┐       ┌────────┴───────────────┐
-│  Inbox Agent    │       │   Obsidian Vault       │
-│  (LLM + CLI)   │──────▶│   (Markdown files)     │
-│  classifies,    │       │   = Source of Truth     │
-│  tags, files    │       └────────┬───────────────┘
-└─────────────────┘                │
-                                   │ watches / indexes
-                    ┌──────────────┼──────────────┐
-                    ▼              ▼              ▼
-              ┌──────────┐  ┌──────────┐  ┌──────────┐
-              │ Smart    │  │ Local    │  │ Obsidian │
-              │ Connect. │  │ REST API │  │ CLI      │
-              │ (search) │  │ (CRUD)   │  │ (script) │
-              └────┬─────┘  └────┬─────┘  └────┬─────┘
-                   │             │              │
-                   ▼             ▼              ▼
-              ┌────────────────────────────────────┐
-              │        AI Agents (any)             │
-              │  OpenClaw · Claude · future agents │
-              └────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                    You (Human)                       │
+│   Phone quick note · Voice memo · Long-form write   │
+└───────────┬──────────────────────────┬──────────────┘
+            │ raw input                │ browse/edit
+            ▼                          ▼
+┌──────────────────┐       ┌──────────────────────────┐
+│   00-inbox/      │       │   Obsidian App           │
+│   (drop zone)    │       │   (read/write/link)      │
+└────────┬─────────┘       └──────────────────────────┘
+         │                           ▲
+         ▼                           │
+┌──────────────────┐       ┌─────────┴────────────────┐
+│  AI Agent        │       │   Obsidian Vault         │
+│  (LLM +         │──────▶│   ~/prime-radiant/       │
+│   Obsidian CLI)  │ write │   = Source of Truth      │
+└──────────────────┘       └─────────┬────────────────┘
+         ▲                           │
+         │ read (MCP)                │ cron sync (every 5 min)
+         │                           ▼
+         │                 ┌──────────────────────────┐
+         │                 │   Cloudflare Worker      │
+         │                 │   REST API + MCP server  │
+         │                 ├──────────────────────────┤
+         │                 │ D1  — metadata + FTS5    │
+         └─────────────────│ R2  — markdown storage   │
+                           │ Vectorize — embeddings   │
+                           │ Workers AI — embed model │
+                           └──────────────────────────┘
 ```
 
-**Source of truth:** Markdown files in the Obsidian vault. Everything else is derived.
+**Source of truth:** Markdown files in the local Obsidian vault. Everything else is derived.
 
-**Access layers** (all local, no cloud):
-- **Obsidian CLI** — scriptable note creation, search, property management
-- **Local REST API plugin** — HTTPS API on localhost for full CRUD
-- **Smart Connections MCP** — semantic search over pre-computed embeddings
-- **Git** — version history and backup
+**Data flow:**
+1. **Writes** go through the **Obsidian CLI** → local vault files
+2. **Cron** syncs local vault → Cloudflare Worker every 5 minutes
+3. **Reads/search** go through the **Worker MCP** (semantic, keyword, hybrid search)
+
+**Cloudflare ecosystem:**
+
+| Service | Role |
+|---------|------|
+| **Worker** | Hono app — REST API + MCP server, auth, routing |
+| **D1** | SQLite — note metadata, tags, links, FTS5 full-text search |
+| **R2** | Object storage — raw markdown files |
+| **Vectorize** | Vector database — 384-dim embeddings for semantic search |
+| **Workers AI** | Embedding model — generates vectors on write/sync |
+
+**Local tools:**
+- **Obsidian CLI** — all writes: create, append, move, delete, property management, search
+- **Obsidian Git plugin** — auto-commit every 10 min, version history
+- **Smart Connections** — local embeddings for in-Obsidian semantic search
+- **Dataview** — structured queries over frontmatter
 
 ## Setup
 
@@ -102,8 +114,7 @@ Install from Settings → Community Plugins → Browse:
 
 | Plugin | Purpose | Config |
 |--------|---------|--------|
-| **Smart Connections** | Semantic search via local embeddings | Enable, let it build initial index. Check `.smart-env/` exists after. |
-| **Local REST API** | HTTPS API for external agent access | Default port 27124. Copy API key from settings. |
+| **Smart Connections** | Semantic search via local embeddings (powers "find similar" in Obsidian) | Enable, let it build initial index. Check `.smart-env/` exists after. |
 | **Obsidian Git** | Auto-commit version history | See git setup below. |
 | **Dataview** | Structured queries over frontmatter | Enable. Used by search/retrieval. |
 | **Templater** | Template engine for note creation | Point to `templates/` folder. |
@@ -157,63 +168,7 @@ curl http://localhost:11434/api/embed -d '{
 }'
 ```
 
-### 6. Smart Connections MCP Server
-
-This gives any MCP-compatible agent semantic search over your vault.
-
-```bash
-git clone https://github.com/msdanyg/smart-connections-mcp.git ~/smart-connections-mcp
-cd ~/smart-connections-mcp
-npm install && npm run build
-```
-
-Add to your MCP config (e.g. `~/.claude/claude_desktop_config.json`):
-```json
-{
-  "mcpServers": {
-    "smart-connections": {
-      "command": "node",
-      "args": ["<path-to>/smart-connections-mcp/dist/index.js"],
-      "env": {
-        "SMART_VAULT_PATH": "<path-to-your-vault>"
-      }
-    }
-  }
-}
-```
-
-**MCP tools exposed:**
-
-| Tool | Description |
-|------|-------------|
-| `get_similar_notes` | Semantic search by meaning (query, limit, threshold) |
-| `get_connection_graph` | Multi-level graph of related notes from a starting note |
-| `search_notes` | Keyword-ranked search |
-| `get_note_content` | Read full note or specific section |
-| `get_stats` | Vault metrics (total notes, embedding dimensions, model) |
-
-### 7. Local REST API Reference
-
-Base URL: `https://127.0.0.1:27124`
-Auth: `Authorization: Bearer <api-key>` (find in plugin settings)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/vault/{path}` | Read file |
-| PUT | `/vault/{path}` | Create/overwrite file |
-| POST | `/vault/{path}` | Append to file |
-| PATCH | `/vault/{path}` | Insert at heading/block/frontmatter |
-| DELETE | `/vault/{path}` | Delete file |
-| GET | `/vault/` | List vault root |
-| POST | `/search/simple/?query=term` | Full-text search |
-| GET | `/periodic/daily/` | Today's daily note |
-| POST | `/periodic/daily/` | Append to daily note |
-| GET | `/commands/` | List all commands |
-| POST | `/commands/{id}/` | Execute command |
-
-Self-signed cert — use `-k` with curl or disable cert verification in agents.
-
-### 8. Obsidian CLI Reference
+### 6. Obsidian CLI Reference
 
 Requires Obsidian to be running. Communicates via IPC.
 
@@ -326,10 +281,20 @@ Max 2 levels deep. Maintain a `Tags Index.md` note in the vault root as the cano
 
 ## Agent Access Patterns
 
-See the skill files for complete instructions:
+Agents **write locally** via Obsidian CLI, **read remotely** via the Worker MCP:
 
-- **`skills/ingest.md`** — How an LLM should structure, classify, and file incoming data
-- **`skills/retrieve.md`** — How an LLM should search, query, and extract data
+| Operation | Method | Why |
+|-----------|--------|-----|
+| Create/update/append/delete notes | Obsidian CLI | Keeps local vault as source of truth |
+| Search (semantic, keyword, hybrid) | Worker MCP (`vault_search`) | Cloudflare has embeddings + FTS5 |
+| Read note content | Worker MCP (`vault_read`) or Obsidian CLI | Either works; MCP if Obsidian isn't running |
+| Graph/backlinks/tags/stats | Worker MCP | Pre-indexed in D1 |
+| Frontmatter properties | Obsidian CLI (`property:set`) | Direct local edit |
+
+See the skill files for complete agent instructions:
+
+- **`skills/ingest.md`** — How to structure, classify, and file incoming data (writes via Obsidian CLI)
+- **`skills/retrieve.md`** — How to search, query, and extract data (reads via MCP + CLI)
 
 These are agent-agnostic. Use them as system prompts, Claude Code skills, or reference docs for any LLM.
 
