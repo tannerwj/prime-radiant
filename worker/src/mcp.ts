@@ -124,15 +124,8 @@ const TOOLS: Tool[] = [
 
 async function handleToolCall(env: Env, name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
-    case 'vault_search': {
-      const mode = (args.mode as string) || 'hybrid';
-      const limit = (args.limit as number) || 10;
-      switch (mode) {
-        case 'keyword': return vault.searchKeyword(env, args.query as string, limit);
-        case 'semantic': return vault.searchSemantic(env, args.query as string, limit);
-        default: return vault.searchHybrid(env, args.query as string, limit);
-      }
-    }
+    case 'vault_search':
+      return vault.search(env, args.query as string, (args.mode as vault.SearchMode) || 'hybrid', (args.limit as number) || 10);
     case 'vault_read': {
       const note = await vault.readNote(env, args.path as string);
       if (!note) return { error: 'Not found' };
@@ -157,15 +150,8 @@ async function handleToolCall(env: Env, name: string, args: Record<string, unkno
       return vault.listTags(env);
     case 'vault_backlinks':
       return vault.getBacklinks(env, args.path as string);
-    case 'vault_stats': {
-      // Reuse the stats logic inline
-      const [noteCount, tagCount, linkCount] = await Promise.all([
-        env.BRAIN_DB.prepare('SELECT count(*) as n FROM notes').first<{ n: number }>(),
-        env.BRAIN_DB.prepare('SELECT count(DISTINCT tag) as n FROM tags').first<{ n: number }>(),
-        env.BRAIN_DB.prepare('SELECT count(*) as n FROM links').first<{ n: number }>(),
-      ]);
-      return { notes: noteCount?.n || 0, tags: tagCount?.n || 0, links: linkCount?.n || 0 };
-    }
+    case 'vault_stats':
+      return vault.getStats(env);
     default:
       throw new Error(`Unknown tool: ${name}`);
   }

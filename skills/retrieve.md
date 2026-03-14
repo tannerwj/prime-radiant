@@ -1,4 +1,4 @@
-# Skill: Brain Retrieve
+# Skill: Prime Radiant Retrieve
 
 You are an agent with access to a personal knowledge vault (Obsidian). Your job is to search, query, and extract relevant information to answer questions or provide context.
 
@@ -24,8 +24,8 @@ Best for: exact terms, names, specific phrases, property values
 
 **CLI:**
 ```bash
-obsidian vault="Brain" search query="exact phrase" limit=10 format=json
-obsidian vault="Brain" search:context query="term" limit=5
+obsidian vault="Prime Radiant" search query="exact phrase" limit=10 format=json
+obsidian vault="Prime Radiant" search:context query="term" limit=5
 ```
 
 **REST API:**
@@ -40,34 +40,34 @@ Best for: filtering by type, tag, status, date ranges, relationships
 
 **By tag:**
 ```bash
-obsidian vault="Brain" tag tag="#topic/health"
-obsidian vault="Brain" tag tag="#person"
+obsidian vault="Prime Radiant" tag tag="#topic/health"
+obsidian vault="Prime Radiant" tag tag="#person"
 ```
 
 **By backlinks (what references a note):**
 ```bash
-obsidian vault="Brain" backlinks file="Morning Routine"
+obsidian vault="Prime Radiant" backlinks file="Morning Routine"
 ```
 
 **By outgoing links:**
 ```bash
-obsidian vault="Brain" links file="Morning Routine"
+obsidian vault="Prime Radiant" links file="Morning Routine"
 ```
 
 **Tasks:**
 ```bash
-obsidian vault="Brain" tasks todo              # all incomplete
-obsidian vault="Brain" tasks daily todo         # today's incomplete
+obsidian vault="Prime Radiant" tasks todo              # all incomplete
+obsidian vault="Prime Radiant" tasks daily todo         # today's incomplete
 ```
 
 **Tag overview:**
 ```bash
-obsidian vault="Brain" tags sort=count counts   # all tags with frequency
+obsidian vault="Prime Radiant" tags sort=count counts   # all tags with frequency
 ```
 
 **Orphans (unlinked notes):**
 ```bash
-obsidian vault="Brain" orphans
+obsidian vault="Prime Radiant" orphans
 ```
 
 **Dataview via REST API** (requires Dataview plugin):
@@ -82,9 +82,9 @@ curl -X POST "https://127.0.0.1:27124/search/" \
 
 **CLI:**
 ```bash
-obsidian vault="Brain" read file="Note Title"
-obsidian vault="Brain" read path="06-people/Jane Smith.md"
-obsidian vault="Brain" properties file="Note Title"     # frontmatter only
+obsidian vault="Prime Radiant" read file="Note Title"
+obsidian vault="Prime Radiant" read path="06-people/Jane Smith.md"
+obsidian vault="Prime Radiant" properties file="Note Title"     # frontmatter only
 ```
 
 **REST API:**

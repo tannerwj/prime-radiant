@@ -5,17 +5,17 @@ compatibility_date = "2025-01-01"
 # --- Fill these in after running setup commands ---
 
 [[d1_databases]]
-binding = "BRAIN_DB"
-database_name = "brain-db"
-database_id = "" # paste from `npm run db:create` output
+binding = "PRIME_RADIANT_DB"
+database_name = "prime-radiant-db"
+database_id = "031dbacf-c383-400c-96f4-0537a41351cd"
 
 [[r2_buckets]]
-binding = "BRAIN_VAULT"
-bucket_name = "brain-vault"
+binding = "PRIME_RADIANT_VAULT"
+bucket_name = "prime-radiant-vault"
 
 [[vectorize]]
-binding = "BRAIN_EMBEDDINGS"
-index_name = "brain-embeddings"
+binding = "PRIME_RADIANT_EMBEDDINGS"
+index_name = "prime-radiant-embeddings"
 
 [ai]
 binding = "AI"

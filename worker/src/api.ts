@@ -58,14 +58,8 @@ api.get('/search', async (c) => {
   const query = c.req.query('q');
   if (!query) return c.json({ error: 'Query parameter q required' }, 400);
   const limit = Number(c.req.query('limit')) || 10;
-  const mode = c.req.query('mode') || 'hybrid';
-
-  let results;
-  switch (mode) {
-    case 'keyword': results = await vault.searchKeyword(c.env, query, limit); break;
-    case 'semantic': results = await vault.searchSemantic(c.env, query, limit); break;
-    default: results = await vault.searchHybrid(c.env, query, limit);
-  }
+  const mode = (c.req.query('mode') || 'hybrid') as vault.SearchMode;
+  const results = await vault.search(c.env, query, mode, limit);
   return c.json({ query, mode, results });
 });
 
@@ -100,24 +94,24 @@ api.get('/manifest', async (c) => {
 
 api.post('/sync', async (c) => {
   const body = await c.req.json<{ files: { path: string; content: string }[]; prune?: boolean }>();
-  const results: { path: string; status: string }[] = [];
   const activePaths = new Set<string>();
 
-  for (const file of body.files) {
+  // Fetch existing checksums from D1 in one query (avoids N R2 reads)
+  const manifest = await vault.getManifest(c.env);
+
+  const results = await Promise.all(body.files.map(async (file) => {
     activePaths.add(file.path);
     try {
-      // Check if content changed
-      const existing = await vault.readNote(c.env, file.path);
-      if (existing && checksum(existing.raw) === checksum(file.content)) {
-        results.push({ path: file.path, status: 'unchanged' });
-        continue;
+      const existingHash = manifest[file.path];
+      if (existingHash && existingHash === checksum(file.content)) {
+        return { path: file.path, status: 'unchanged' };
       }
       await vault.writeNote(c.env, file.path, file.content);
-      results.push({ path: file.path, status: existing ? 'updated' : 'created' });
+      return { path: file.path, status: existingHash ? 'updated' : 'created' };
     } catch (e) {
-      results.push({ path: file.path, status: `error: ${e}` });
+      return { path: file.path, status: `error: ${e}` };
     }
-  }
+  }));
 
   let pruned = 0;
   if (body.prune) {
@@ -137,21 +131,7 @@ api.post('/sync', async (c) => {
 // --- Stats ---
 
 api.get('/stats', async (c) => {
-  const [noteCount, tagCount, linkCount] = await Promise.all([
-    c.env.BRAIN_DB.prepare('SELECT count(*) as n FROM notes').first<{ n: number }>(),
-    c.env.BRAIN_DB.prepare('SELECT count(DISTINCT tag) as n FROM tags').first<{ n: number }>(),
-    c.env.BRAIN_DB.prepare('SELECT count(*) as n FROM links').first<{ n: number }>(),
-  ]);
-  const typeDist = await c.env.BRAIN_DB.prepare(
-    "SELECT type, count(*) as count FROM notes WHERE type != '' GROUP BY type ORDER BY count DESC"
-  ).all<{ type: string; count: number }>();
-
-  return c.json({
-    notes: noteCount?.n || 0,
-    tags: tagCount?.n || 0,
-    links: linkCount?.n || 0,
-    types: typeDist.results,
-  });
+  return c.json(await vault.getStats(c.env));
 });
 
 export default api;

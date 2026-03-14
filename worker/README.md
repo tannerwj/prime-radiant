@@ -35,14 +35,14 @@ npm install
 wrangler login
 
 # Create D1 database
-wrangler d1 create brain-db
+wrangler d1 create prime-radiant-db
 # Copy the database_id from the output
 
 # Create R2 bucket
-wrangler r2 bucket create brain-vault
+wrangler r2 bucket create prime-radiant-vault
 
 # Create Vectorize index
-wrangler vectorize create brain-embeddings --dimensions=384 --metric=cosine
+wrangler vectorize create prime-radiant-embeddings --dimensions=384 --metric=cosine
 ```
 
 ### 3. Configure
@@ -59,10 +59,10 @@ wrangler secret put API_TOKEN
 
 ```bash
 # Local (for dev)
-wrangler d1 execute brain-db --file=schema.sql
+wrangler d1 execute prime-radiant-db --file=schema.sql
 
 # Remote (for production)
-wrangler d1 execute brain-db --file=schema.sql --remote
+wrangler d1 execute prime-radiant-db --file=schema.sql --remote
 ```
 
 ### 5. Deploy
@@ -76,20 +76,20 @@ Your worker is now live at `https://prime-radiant.<your-subdomain>.workers.dev`.
 ### 6. Sync your vault
 
 ```bash
-export BRAIN_API_URL="https://prime-radiant.<your-subdomain>.workers.dev"
-export BRAIN_API_TOKEN="<your-token>"
+export PRIME_RADIANT_URL="https://prime-radiant.<your-subdomain>.workers.dev"
+export PRIME_RADIANT_TOKEN="<your-token>"
 
 # Full sync (first time)
-FULL_SYNC=1 ../scripts/sync.sh ~/Brain
+FULL_SYNC=1 ../scripts/sync.sh /path/to/vault
 
 # Incremental sync (subsequent)
-../scripts/sync.sh ~/Brain
+../scripts/sync.sh /path/to/vault
 ```
 
 Add to crontab for automatic sync:
 ```bash
 # Every 5 minutes
-*/5 * * * * BRAIN_API_URL="..." BRAIN_API_TOKEN="..." /path/to/scripts/sync.sh ~/Brain
+*/5 * * * * PRIME_RADIANT_URL="..." PRIME_RADIANT_TOKEN="..." /path/to/scripts/sync.sh /path/to/vault
 ```
 
 Or trigger from the Obsidian Git plugin's post-commit hook.
@@ -149,10 +149,19 @@ https://prime-radiant.<subdomain>.workers.dev/mcp?key=<your-token>
 
 ### Claude Code
 
-```bash
-claude mcp add --transport http prime-radiant \
-  https://prime-radiant.<subdomain>.workers.dev/mcp \
-  --header "x-brain-key: <your-token>"
+Add to your project's `.mcp.json`:
+```json
+{
+  "mcpServers": {
+    "prime-radiant": {
+      "type": "http",
+      "url": "https://prime-radiant.<subdomain>.workers.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-token>"
+      }
+    }
+  }
+}
 ```
 
 ### Tools

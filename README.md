@@ -219,7 +219,7 @@ Requires Obsidian to be running. Communicates via IPC.
 
 ```bash
 # Target a specific vault (must be first arg)
-obsidian vault="Brain" <command>
+obsidian vault="Prime Radiant" <command>
 
 # File operations
 obsidian create name="00-inbox/quick thought" content="raw text here"
@@ -346,7 +346,7 @@ These are agent-agnostic. Use them as system prompts, Claude Code skills, or ref
 - [x] R2 file storage + D1 FTS5 + Vectorize semantic search
 - [x] Hybrid search with Reciprocal Rank Fusion
 - [x] Vault sync script
-- [ ] Graph traversal and backlink queries
+- [x] Graph traversal and backlink queries
 
 **Phase 3 — Visualization** (optional, planned)
 - [ ] Quartz static site with interactive graph view

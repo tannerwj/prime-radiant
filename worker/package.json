@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create brain-db",
-    "db:migrate": "wrangler d1 execute brain-db --file=schema.sql",
-    "db:migrate:remote": "wrangler d1 execute brain-db --file=schema.sql --remote",
-    "vec:create": "wrangler vectorize create brain-embeddings --dimensions=384 --metric=cosine",
+    "db:create": "wrangler d1 create prime-radiant-db",
+    "db:migrate": "wrangler d1 execute prime-radiant-db --file=schema.sql",
+    "db:migrate:remote": "wrangler d1 execute prime-radiant-db --file=schema.sql --remote",
+    "vec:create": "wrangler vectorize create prime-radiant-embeddings --dimensions=384 --metric=cosine",
     "setup": "npm run db:create && npm run vec:create && echo 'Now update wrangler.toml with your database_id, then run: npm run db:migrate:remote'"
   },
   "dependencies": {

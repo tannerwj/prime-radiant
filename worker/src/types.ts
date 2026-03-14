@@ -1,7 +1,7 @@
 export interface Env {
-  BRAIN_DB: D1Database;
-  BRAIN_VAULT: R2Bucket;
-  BRAIN_EMBEDDINGS: VectorizeIndex;
+  PRIME_RADIANT_DB: D1Database;
+  PRIME_RADIANT_VAULT: R2Bucket;
+  PRIME_RADIANT_EMBEDDINGS: VectorizeIndex;
   AI: Ai;
   API_TOKEN: string;
 }

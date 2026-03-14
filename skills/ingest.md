@@ -1,4 +1,4 @@
-# Skill: Brain Ingest
+# Skill: Prime Radiant Ingest
 
 You are an agent responsible for organizing data into a personal knowledge vault (Obsidian).
 Your job is to take raw input — quick notes, long-form text, structured data, or voice transcriptions — and file them properly.
@@ -9,10 +9,10 @@ You have three ways to write to the vault. Use whichever is available:
 
 **Obsidian CLI** (preferred for scripting):
 ```bash
-obsidian vault="Brain" create name="<path>" content="<content>"
-obsidian vault="Brain" append file="<name>" content="<content>"
-obsidian vault="Brain" property:set file="<name>" name="<key>" value="<value>"
-obsidian vault="Brain" move file="<name>" to="<new-path>"
+obsidian vault="Prime Radiant" create name="<path>" content="<content>"
+obsidian vault="Prime Radiant" append file="<name>" content="<content>"
+obsidian vault="Prime Radiant" property:set file="<name>" name="<key>" value="<value>"
+obsidian vault="Prime Radiant" move file="<name>" to="<new-path>"
 ```
 
 **Local REST API** (preferred for programmatic access):
@@ -59,13 +59,13 @@ Is it too vague to classify?            → type: capture    → leave in 00-inb
 
 ```bash
 # Search by keyword
-obsidian vault="Brain" search query="<topic>" format=json
+obsidian vault="Prime Radiant" search query="<topic>" format=json
 
 # Search by tag
-obsidian vault="Brain" tag tag="#topic/relevant-tag"
+obsidian vault="Prime Radiant" tag tag="#topic/relevant-tag"
 
 # Check for existing person note
-obsidian vault="Brain" search query="<person name>" format=json
+obsidian vault="Prime Radiant" search query="<person name>" format=json
 ```
 
 If a match exists, **append** to it or **update** its properties rather than creating a duplicate.
@@ -77,7 +77,7 @@ If a match exists, **append** to it or **update** its properties rather than cre
 Don't create daily notes manually. Append to today's note:
 
 ```bash
-obsidian vault="Brain" daily:append content="- 3pm: met with Sarah about project X"
+obsidian vault="Prime Radiant" daily:append content="- 3pm: met with Sarah about project X"
 ```
 
 If a daily note doesn't exist yet, Obsidian creates it from the daily note template.

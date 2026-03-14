@@ -20,7 +20,7 @@ app.use('/api/*', async (c, next) => {
 
 app.use('/mcp', async (c, next) => {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')
-    || c.req.header('x-brain-key')
+    || c.req.header('x-api-key')
     || c.req.query('key');
   if (!token || token !== c.env.API_TOKEN) {
     return c.json({ error: 'Unauthorized' }, 401);

@@ -89,13 +89,16 @@ function unquote(s: string): string {
 }
 
 function extractWikilinks(text: string): NoteLink[] {
-  const links: NoteLink[] = [];
+  const seen = new Map<string, NoteLink>();
   const re = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
-    links.push({ target: m[1].trim(), display: (m[2] || m[1]).trim() });
+    const target = m[1].trim();
+    if (!seen.has(target)) {
+      seen.set(target, { target, display: (m[2] || m[1]).trim() });
+    }
   }
-  return links;
+  return [...seen.values()];
 }
 
 function extractTags(text: string): string[] {

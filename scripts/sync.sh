@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sync local Obsidian vault to the remote Brain worker.
+# Sync local Obsidian vault to the remote Prime Radiant worker.
 # Usage: ./scripts/sync.sh [vault_path]
 #
 # Environment variables:
-#   BRAIN_API_URL   - Worker URL (e.g. https://prime-radiant.you.workers.dev)
-#   BRAIN_API_TOKEN - API bearer token
+#   PRIME_RADIANT_URL   - Worker URL (e.g. https://prime-radiant.you.workers.dev)
+#   PRIME_RADIANT_TOKEN - API bearer token
 
 VAULT="${1:-$HOME/Brain}"
-API="${BRAIN_API_URL:?Set BRAIN_API_URL}"
-TOKEN="${BRAIN_API_TOKEN:?Set BRAIN_API_TOKEN}"
-SYNC_FILE="$VAULT/.brain-last-sync"
+API="${PRIME_RADIANT_URL:?Set PRIME_RADIANT_URL}"
+TOKEN="${PRIME_RADIANT_TOKEN:?Set PRIME_RADIANT_TOKEN}"
+SYNC_FILE="$VAULT/.prime-radiant-last-sync"
 BATCH_SIZE=20
 
 if [ ! -d "$VAULT" ]; then
