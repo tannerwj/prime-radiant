@@ -1,0 +1,25 @@
+name = "prime-radiant"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# --- Fill these in after running setup commands ---
+
+[[d1_databases]]
+binding = "BRAIN_DB"
+database_name = "brain-db"
+database_id = "" # paste from `npm run db:create` output
+
+[[r2_buckets]]
+binding = "BRAIN_VAULT"
+bucket_name = "brain-vault"
+
+[[vectorize]]
+binding = "BRAIN_EMBEDDINGS"
+index_name = "brain-embeddings"
+
+[ai]
+binding = "AI"
+
+# Set via: wrangler secret put API_TOKEN
+# [vars]
+# API_TOKEN is a secret, not a var
