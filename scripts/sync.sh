@@ -8,7 +8,7 @@ set -euo pipefail
 #   PRIME_RADIANT_URL   - Worker URL (e.g. https://prime-radiant.you.workers.dev)
 #   PRIME_RADIANT_TOKEN - API bearer token
 
-VAULT="${1:-$HOME/Brain}"
+VAULT="${1:?Usage: sync.sh <vault_path>}"
 API="${PRIME_RADIANT_URL:?Set PRIME_RADIANT_URL}"
 TOKEN="${PRIME_RADIANT_TOKEN:?Set PRIME_RADIANT_TOKEN}"
 SYNC_FILE="$VAULT/.prime-radiant-last-sync"

@@ -64,24 +64,24 @@ Start with Core. Add modules when you need them.
 
 ### 1. Obsidian Vault
 
-Create a new vault or designate an existing one as your brain.
+Create a new vault or designate an existing one as your Prime Radiant.
 
 ```bash
 # Create vault directory
-mkdir -p ~/Brain
+mkdir -p ~/prime-radiant
 
 # Open in Obsidian (creates .obsidian config)
-open "obsidian://new-vault?path=$HOME/Brain&name=Brain"
+open "obsidian://new-vault?path=$HOME/prime-radiant&name=Prime Radiant"
 ```
 
 Copy the vault structure and templates:
 
 ```bash
 # Create folder structure
-mkdir -p ~/Brain/{00-inbox,01-daily,02-notes,03-projects,04-areas,05-resources,06-people,07-archive,templates,assets}
+mkdir -p ~/prime-radiant/{00-inbox,01-daily,02-notes,03-projects,04-areas,05-resources,06-people,07-archive,templates,assets}
 
 # Copy templates from this repo
-cp templates/*.md ~/Brain/templates/
+cp templates/*.md ~/prime-radiant/templates/
 ```
 
 ### 2. Obsidian Sync (cross-device)
@@ -92,7 +92,7 @@ Settings → Sync → enable. Works on all platforms including mobile.
 **Option B — Syncthing** (free, self-hosted):
 ```bash
 brew install syncthing
-# Configure to sync ~/Brain between devices
+# Configure to sync ~/prime-radiant between devices
 # Exclude: .obsidian/workspace.json, .obsidian/workspace-mobile.json
 ```
 
@@ -111,7 +111,7 @@ Install from Settings → Community Plugins → Browse:
 ### 4. Git Version History
 
 ```bash
-cd ~/Brain
+cd ~/prime-radiant
 
 git init
 ```
@@ -130,7 +130,7 @@ git add .
 git commit -m "initial vault"
 
 # Optional: push to private remote for backup
-git remote add origin git@github.com:YOUR_USER/brain-vault.git
+git remote add origin git@github.com:YOUR_USER/prime-radiant.git
 git push -u origin main
 ```
 
@@ -270,7 +270,7 @@ obsidian folders                        # folder tree
 ## Vault Structure
 
 ```
-~/Brain/
+~/prime-radiant/
 ├── 00-inbox/          # Raw captures. LLM triages from here.
 ├── 01-daily/          # Daily notes (YYYY-MM-DD.md)
 ├── 02-notes/          # Permanent notes (flat, organized by metadata)
