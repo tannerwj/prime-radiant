@@ -68,14 +68,14 @@ with open(sys.argv[1], 'r') as f:
 
   # Append to batch
   if [ "$COUNT" -eq 0 ]; then
-    FILES="[{\"path\":$(python3 -c "import json; print(json.dumps('$path'))"),\"content\":$content}]"
+    FILES="[{\"path\":$(python3 -c "import json,sys; print(json.dumps(sys.argv[1]))" "$path"),\"content\":$content}]"
   else
     FILES=$(echo "$FILES" | python3 -c "
 import json, sys
 batch = json.load(sys.stdin)
-batch.append({'path': '$path', 'content': $content})
+batch.append({'path': sys.argv[1], 'content': $content})
 print(json.dumps(batch))
-")
+" "$path")
   fi
 
   COUNT=$((COUNT + 1))

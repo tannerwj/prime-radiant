@@ -84,6 +84,16 @@ export async function deleteNote(env: Env, path: string): Promise<boolean> {
 
 // --- Search ---
 
+/** Sanitize a query for FTS5 MATCH: strip operators, quote each term as a literal. */
+function sanitizeFts5Query(query: string): string {
+  const terms = query
+    .replace(/[^\w\s]/g, ' ')  // strip all non-word, non-space chars
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!terms.length) return '""';
+  return terms.map(t => `"${t}"`).join(' ');
+}
+
 export type SearchMode = 'hybrid' | 'keyword' | 'semantic';
 
 export async function search(env: Env, query: string, mode: SearchMode = 'hybrid', limit = 10): Promise<SearchResult[]> {
@@ -95,6 +105,7 @@ export async function search(env: Env, query: string, mode: SearchMode = 'hybrid
 }
 
 async function searchKeyword(env: Env, query: string, limit: number): Promise<SearchResult[]> {
+  const safeQuery = sanitizeFts5Query(query);
   const results = await env.PRIME_RADIANT_DB.prepare(`
     SELECT n.path, n.title, n.type, n.status,
            snippet(notes_fts, 2, '<mark>', '</mark>', '...', 32) as snippet,
@@ -104,7 +115,7 @@ async function searchKeyword(env: Env, query: string, limit: number): Promise<Se
     WHERE notes_fts MATCH ?1
     ORDER BY rank
     LIMIT ?2
-  `).bind(query, limit).all<SearchResult & { rank: number }>();
+  `).bind(safeQuery, limit).all<SearchResult & { rank: number }>();
   return results.results.map(r => ({
     path: r.path, title: r.title, type: r.type, status: r.status,
     snippet: r.snippet, score: -r.rank,
